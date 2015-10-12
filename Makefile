@@ -3,4 +3,4 @@ test:
 
 build:
 	npm install
-	node server.js
+	nodejs server.js
