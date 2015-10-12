@@ -29,7 +29,7 @@ node server.js
 ### Screenshot
 
 ```
-/api/screenshoot/:url
+/api/screenshot/:url
 ```
 
 where url is a url to the page you want to render. Url has to be encoded when passed in.
