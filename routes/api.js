@@ -13,7 +13,7 @@ router.get('/screenshot/:url', function(req, res){
         ph.createPage(function (page) {
             page.get('settings.userAgent', function(data) {
                 page.set('viewportSize', {width:800, height:600});
-                page.set('settings.userAgent', data + ' Photob:\ooth (+https://github.com/Onefootball/PhotoBoothApi.git)');
+                page.set('settings.userAgent', data + ' Photobooth (+https://github.com/Onefootball/PhotoBoothApi.git)');
                 page.open(url, function (status) {
                     console.log("opened url? ", status);
                     page.renderBase64('png', function (data) {
