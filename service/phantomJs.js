@@ -40,7 +40,7 @@ phantomJS.screenshot = function (req, res) {
                             });
                             res.end(img);
                         });
-                    }, 300);
+                    }, 1000);
                 });
             });
         });
