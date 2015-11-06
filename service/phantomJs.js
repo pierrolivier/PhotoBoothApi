@@ -29,16 +29,30 @@ phantomJS.screenshot = function (req, res) {
                         request.abort();
                     }
                 });
-                page.open(url, function (status) {
-                    page.renderBase64('png', function (data) {
-                        ph.exit();
-                        var img = new Buffer(data, 'base64');
-                        res.writeHead(200, {
-                            'Content-Type': 'image/png',
-                            'Content-Length': img.length
+
+                page.open(url, function () {
+                    function checkReadyState() {
+                        setTimeout(function () {
+                            page.evaluate(function () {
+                                return document.readyState;
+                            }, function (result) {
+                                if ("complete" === result) {
+                                    page.renderBase64('png', function (data) {
+                                        ph.exit();
+                                        var img = new Buffer(data, 'base64');
+                                        res.writeHead(200, {
+                                            'Content-Type': 'image/png',
+                                            'Content-Length': img.length
+                                        });
+                                        res.end(img);
+                                    });
+                                } else {
+                                    checkReadyState();
+                                }
+                            });
                         });
-                        res.end(img);
-                    });
+                    }
+                    checkReadyState();
                 });
             });
         });
