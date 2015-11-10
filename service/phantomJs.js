@@ -1,6 +1,5 @@
 var phantom = require('phantom');
 var urlUtil = require('url');
-exec = require('child_process').exec;
 
 var ALLOWED_ORIGINS = ['onefootball.com'];
 
@@ -19,7 +18,6 @@ phantomJS.screenshot = function (req, res) {
         res.status(403).send('Forbidden');
         return;
     }
-
     phantom.create(function (ph) {
         ph.createPage(function (page) {
             page.get('settings.userAgent', function (data) {
@@ -32,7 +30,7 @@ phantomJS.screenshot = function (req, res) {
                     }
                 });
 
-                page.open(url, function (status) {
+                page.open(url, function () {
                     function checkReadyState() {
                         setTimeout(function () {
                             page.evaluate(function () {
@@ -40,13 +38,13 @@ phantomJS.screenshot = function (req, res) {
                             }, function (result) {
                                 if ("complete" === result) {
                                     page.renderBase64('png', function (data) {
+                                        ph.exit();
                                         var img = new Buffer(data, 'base64');
                                         res.writeHead(200, {
                                             'Content-Type': 'image/png',
                                             'Content-Length': img.length
                                         });
                                         res.end(img);
-                                        phantomExit(ph, page);
                                     });
                                 } else {
                                     checkReadyState();
@@ -54,30 +52,10 @@ phantomJS.screenshot = function (req, res) {
                             });
                         });
                     }
-                    if(status === 'success') {
-                        checkReadyState();
-                    } else {
-                        res.status(500).send("Page status: " + status);
-                        phantomExit(ph, page);
-                    }
+                    checkReadyState();
                 });
             });
         });
-    });
-};
-
-var phantomExit = function (ph, page) {
-    page.close();
-    var processId = ph.process.pid;
-    ph.exit();
-    exec('kill ' + processId, function (error, stdout) {
-        if(error) {
-           console.log(error);
-        } else if (stdout) {
-            console.log(stdout);
-        } else {
-            console.log("Check what's happening with kill.");
-        }
     });
 };
 
