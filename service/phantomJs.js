@@ -1,6 +1,6 @@
 var phantom = require('phantom');
 var urlUtil = require('url');
-
+var exec = require('child_process').exec;
 var ALLOWED_ORIGINS = ['onefootball.com'];
 
 var phantomJS = {};
@@ -30,7 +30,7 @@ phantomJS.screenshot = function (req, res) {
                     }
                 });
 
-                page.open(url, function () {
+                page.open(url, function (status) {
                     function checkReadyState() {
                         setTimeout(function () {
                             page.evaluate(function () {
@@ -38,13 +38,13 @@ phantomJS.screenshot = function (req, res) {
                             }, function (result) {
                                 if ("complete" === result) {
                                     page.renderBase64('png', function (data) {
-                                        ph.exit();
                                         var img = new Buffer(data, 'base64');
                                         res.writeHead(200, {
                                             'Content-Type': 'image/png',
                                             'Content-Length': img.length
                                         });
                                         res.end(img);
+                                        phantomExit(ph, page);
                                     });
                                 } else {
                                     checkReadyState();
@@ -52,13 +52,35 @@ phantomJS.screenshot = function (req, res) {
                             });
                         });
                     }
-                    checkReadyState();
+                    if(status === 'success') {
+                        checkReadyState();
+                    } else {
+                        res.status(500).send("Page status: " + status);
+                        phantomExit(ph, page);
+                    }
                 });
             });
         });
     });
 };
 
+
+var phantomExit = function (ph, page) {
+    page.close();
+    var processId = ph.process.pid;
+    ph.exit();
+    exec('kill ' + processId, function (error, stdout, stderr) {
+        if(error) {
+           console.log(error);
+        } else if (stdout) {
+            console.log(stdout);
+        } else if (stderr) {
+            console.log(stderr);
+        } else {
+            console.log("Check what's happening with kill.");
+        }
+    });
+};
 
 function isValidOrigin(url) {
     try {
