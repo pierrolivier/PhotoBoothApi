@@ -18,19 +18,20 @@ phantomJS.screenshot = function (req, res) {
         res.status(403).send('Forbidden');
         return;
     }
+    
     phantom.create(function (ph) {
         ph.createPage(function (page) {
             page.get('settings.userAgent', function (data) {
                 page.set('viewportSize', {width: viewportWidth, height: viewportHeight});
                 page.set('settings.userAgent', data + ' Photobooth (+https://github.com/Onefootball/PhotoBoothApi.git)');
                 //prevent google analytics from loading
-                page.onResourceRequested(function(requestData, request) {
-                    if ((/google-analytics\.com/gi).test(requestData['url'])){
+                page.onResourceRequested(function (requestData, request) {
+                    if ((/google-analytics\.com/gi).test(requestData['url'])) {
                         request.abort();
                     }
                 });
 
-                page.open(url, function () {
+                page.open(url, function (status) {
                     function checkReadyState() {
                         setTimeout(function () {
                             page.evaluate(function () {
@@ -38,13 +39,13 @@ phantomJS.screenshot = function (req, res) {
                             }, function (result) {
                                 if ("complete" === result) {
                                     page.renderBase64('png', function (data) {
-                                        ph.exit();
                                         var img = new Buffer(data, 'base64');
                                         res.writeHead(200, {
                                             'Content-Type': 'image/png',
                                             'Content-Length': img.length
                                         });
                                         res.end(img);
+                                        closePhantom(ph, page);
                                     });
                                 } else {
                                     checkReadyState();
@@ -52,13 +53,35 @@ phantomJS.screenshot = function (req, res) {
                             });
                         });
                     }
-                    checkReadyState();
+                    if (status === 'success') {
+                        checkReadyState();
+                    } else {
+                        res.status(500).send('Opening message: ' + status);
+                        closePhantom(ph, page);
+                    }
                 });
             });
         });
+    },
+    {
+        onExit: handleExit
     });
 };
 
+var closePhantom = function (ph, page) {
+    page.close();
+    ph.exit();
+};
+
+var handleExit = function (code, signal) {
+    if (code === 0) {
+        console.log("Phantom exit success");
+    } else {
+        //maybe we need to handle it
+        console.log("Code: " + code);
+        console.log("Signal: " + signal);
+    }
+};
 
 function isValidOrigin(url) {
     try {
