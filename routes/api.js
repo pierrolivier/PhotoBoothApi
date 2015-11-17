@@ -11,9 +11,8 @@ var phantomService = require('../service/phantomJs');
 router.get('/screenshot/*', function (req, res, next) {
     var base = '/screenshot/';
     var url = req.url.replace(base, '');
-    var decodedUrl = decodeURIComponent(url);
-    if (decodedUrl === url) {
-        var encodedUrl = encodeURIComponent(decodedUrl);
+    if (url.match(/:\//)) {
+        var encodedUrl = encodeURIComponent(url);
         req.url = base + encodedUrl;
     }
     next('route');
