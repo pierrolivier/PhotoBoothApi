@@ -85,7 +85,13 @@ var handleExit = function (code, signal) {
 
 function isValidOrigin(url) {
     try {
-        var urlNoProtocol = url.split('//')[1];
+        //handle one slash protocol
+        var urlNoProtocol;
+        if (url.indexOf('//') !== -1) {
+            urlNoProtocol = url.split('//')[1];
+        } else {
+            urlNoProtocol = url.split('/')[1];
+        }
         var domain = urlNoProtocol.split('/')[0];
         //domain should end with allowed origin
         for (var i = 0; i < ALLOWED_ORIGINS.length; i++) {
