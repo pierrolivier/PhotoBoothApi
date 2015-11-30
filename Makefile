@@ -1,6 +1,12 @@
-test:
-	echo "OK"
+.PHONY: all test build deps
 
-build:
+all: deps
+
+deps:
 	npm install
-	nodejs server.js
+
+build: deps
+	tar -jcf app.bz2 *
+
+test:
+	true
