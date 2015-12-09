@@ -20,6 +20,8 @@ app.use(responseTime(function(req, res, time) {
     console.log('Url: ' + req.url);
     console.log('Response status code: ' + res.statusCode);
     console.log('Time spent: ' + time + ' ms');
+    console.log('All headers: ' + JSON.stringify(req.headers, null, 2));
+    console.log('Timestamp: ' + new Date());
     console.log('===================');
 }));
 
