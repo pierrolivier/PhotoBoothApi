@@ -24,6 +24,14 @@ npm install
 node server.js
 ```
 
+It's configured to reach only the _onefootball.com_ domain.
+If you want, you can enable other origins editing the `ALLOWED_ORIGINS` variable in `service/phantomJs.js`
+
+```js
+var ALLOWED_ORIGINS = ['localhost', 'onefootball.com'];
+```
+
+
 ## Endpoints
 
 ### Screenshot
