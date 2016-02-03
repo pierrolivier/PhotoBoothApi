@@ -1,0 +1,13 @@
+# Health check
+# Request photo every 30 minutes and mail us if response is not 200
+
+services:
+ photobooth:
+  url: http://127.0.0.1:3000/api/screenshot/https%3A%2F%2Fperegrine-api.onefootball.com%2Fphotobooth%2Fmatch%2F9%2F432927%3Flocale%3Den-US%26period%3DPreMatch%26variable%3Dg-2
+  seconds: 1800
+  follow: true
+  expect:
+   status: 200
+   if_not:
+    cmd: echo "Photobooth is not reachable"
+    notify: webapp@onefootball.com nicolas.embriz@onefootball.com
