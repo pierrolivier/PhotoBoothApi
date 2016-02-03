@@ -24,6 +24,14 @@ npm install
 node server.js
 ```
 
+It's configured to reach only the _onefootball.com_ domain.
+If you want, you can enable other origins editing the `ALLOWED_ORIGINS` variable in `service/phantomJs.js`
+
+```js
+var ALLOWED_ORIGINS = ['localhost', 'onefootball.com'];
+```
+
+
 ## Endpoints
 
 ### Screenshot
@@ -32,6 +40,8 @@ node server.js
 /api/screenshot/:url
 ```
 
-where url is a url to the page you want to render. Url has to be encoded when passed in.
+where `url` is a url to the page you want to render. Url has to be encoded when passed in.
 
-This endpoint additionally accepts url params, which determine the viewport size. w is param for width and h will determen height. If not passed in, default size will be 800x600.  
+This endpoint additionally accepts parameters, which determine the viewport size. `w` is param for *width* and `h` will determine *height*. If not passed in, default size will be 800x600.
+
+`/api/screenshot/http://www.onefootball.com/?w=640&h=480`
