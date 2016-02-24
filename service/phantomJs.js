@@ -1,70 +1,76 @@
 var phantom = require('phantom');
-var urlUtil = require('url');
+var Promise = require('bluebird');
+var CONFIG = require ('../config/config');
 
-var ALLOWED_ORIGINS = ['onefootball.com'];
+var ALLOWED_ORIGINS = CONFIG.allowed_origins;
 
 var phantomJS = {};
 
-phantomJS.screenshot = function (req, res) {
-    //first get url that is passed in as param
-    var url = decodeURIComponent(req.params.url);
-    //get url params - of current url
-    var url_parts = urlUtil.parse(req.url, true);
-    var query = url_parts.query;
-    var viewportWidth = parseInt(query.w) || 800;
-    var viewportHeight = parseInt(query.h) || 600;
+phantomJS.screenshot = function (url, query) {
 
-    if (!isValidOrigin(url)) {
-        res.status(403).send('Forbidden');
-        return;
-    }
-    
-    phantom.create('--web-security=no', function (ph) {
-        ph.createPage(function (page) {
-            page.get('settings.userAgent', function (data) {
-                page.set('viewportSize', {width: viewportWidth, height: viewportHeight});
-                page.set('settings.userAgent', data + ' Photobooth (+https://github.com/Onefootball/PhotoBoothApi.git)');
-                //prevent google analytics from loading
-                page.onResourceRequested(function (requestData, request) {
-                    if ((/google-analytics\.com/gi).test(requestData['url'])) {
-                        request.abort();
-                    }
-                });
+    return new Promise(function (resolveScreenshot, rejectScreenshot) {
 
-                page.open(url, function (status) {
-                    function checkReadyState() {
-                        setTimeout(function () {
-                            page.evaluate(function () {
-                                return document.readyState;
-                            }, function (result) {
-                                if ("complete" === result) {
-                                    page.renderBase64('png', function (data) {
-                                        var img = new Buffer(data, 'base64');
-                                        res.writeHead(200, {
-                                            'Content-Type': 'image/png',
-                                            'Content-Length': img.length
-                                        });
-                                        res.end(img);
-                                        closePhantom(ph, page);
-                                    });
-                                } else {
-                                    checkReadyState();
-                                }
-                            });
+        var viewportWidth = parseInt(query.w) || 800;
+        var viewportHeight = parseInt(query.h) || 600;
+
+        if (!isValidOrigin(url)) {
+            var response = {
+                status: 403,
+                msg: 'Forbidden'
+            };
+            rejectScreenshot(response);
+            return;
+        }
+
+        phantom.create('--web-security=no', function (ph) {
+                ph.createPage(function (page) {
+                    page.get('settings.userAgent', function (data) {
+                        page.set('viewportSize', {width: viewportWidth, height: viewportHeight});
+                        page.set('settings.userAgent', data + ' Photobooth (+https://github.com/Onefootball/PhotoBoothApi.git)');
+                        //prevent google analytics from loading
+                        page.onResourceRequested(function (requestData, request) {
+                            if ((/google-analytics\.com/gi).test(requestData['url'])) {
+                                request.abort();
+                            }
                         });
-                    }
-                    if (status === 'success') {
-                        checkReadyState();
-                    } else {
-                        res.status(500).send('Opening message: ' + status);
-                        closePhantom(ph, page);
-                    }
+
+                        page.open(url, function (status) {
+                            function checkReadyState() {
+                                setTimeout(function () {
+                                    page.evaluate(function () {
+                                        return document.readyState;
+                                    }, function (result) {
+                                        if ("complete" === result) {
+                                            page.renderBase64('png', function (data) {
+                                                closePhantom(ph, page);
+                                                resolveScreenshot(data);
+                                                return;
+                                            });
+                                        } else {
+                                            checkReadyState();
+                                        }
+                                    });
+                                });
+                            }
+
+                            if (status === 'success') {
+                                checkReadyState();
+                            } else {
+                                closePhantom(ph, page);
+                                var response = {
+                                    status: 500,
+                                    msg: 'Opening message: ' + status
+                                };
+                                rejectScreenshot(response);
+                                return;
+                            }
+                        });
+                    });
                 });
+            },
+            {
+                onExit: handleExit
             });
-        });
-    },
-    {
-        onExit: handleExit
     });
 };
 
