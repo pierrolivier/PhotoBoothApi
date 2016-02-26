@@ -1,0 +1,7 @@
+{
+  "allowed_origins":  ["onefootball.com"],
+  "aws_cache": {
+    "use": true,
+    "bucket":  "onefootball-photobooth"
+  }
+}
