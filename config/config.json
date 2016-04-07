@@ -3,5 +3,13 @@
   "aws_cache": {
     "use": true,
     "bucket":  "onefootball-photobooth"
+  },
+  "logger": {
+    "skip": {
+      "headers": {
+        "user-agent": ["x-haproxy-server-state"],
+        "x-haproxy-server-state": "*"
+      }
+    }
   }
 }
