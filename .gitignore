@@ -30,3 +30,6 @@ node_modules
 photobooth.txt
 
 .idea
+*.sublime-project
+*.sublime-workspace
+
