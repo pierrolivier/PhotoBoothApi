@@ -4,15 +4,28 @@ var CONFIG = require('../config/config');
 
 var ALLOWED_ORIGINS = CONFIG.allowed_origins;
 
+// as supported by PhantomJS http://phantomjs.org/api/webpage/method/render-base64.html
+const OUTPUT_FORMATS = {
+    jpeg: 'JPEG',
+    png: 'PNG',
+    gif: 'GIF'
+};
+
 var phantomJS = {};
 
 phantomJS.screenshot = function (url, query) {
 
     return new Promise(function (resolveScreenshot, rejectScreenshot) {
 
+        var page;
         var viewportWidth = parseInt(query.w) || 800;
         var viewportHeight = parseInt(query.h) || 600;
-        var page;
+        var outputFormat = (function (format) {
+            if (!format || !OUTPUT_FORMATS[format.toLowerCase()]) {
+                return OUTPUT_FORMATS['jpeg'];
+            }
+            return OUTPUT_FORMATS[format.toLowerCase()];
+        } (query.format));
 
         if (!isValidOrigin(url)) {
             var response = {
@@ -60,7 +73,7 @@ phantomJS.screenshot = function (url, query) {
                             return document.readyState;
                         }).then(function (result) {
                             if ("complete" === result) {
-                                page.renderBase64('png').then(function (data) {
+                                page.renderBase64(outputFormat).then(function (data) {
                                     page.close();
                                     ph.exit();
                                     resolveScreenshot(data);
